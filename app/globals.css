@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+:root {
+  --noob-blue: #2f4bff;
+  --noob-pink: #ff2ec8;
+  --noob-muted: #9aa8ff;
+  --noob-bg: #f4f6ff;
+  --noob-white: #ffffff;
+  --noob-ink: #0b0d14;
+  --background: #f4f6ff;
+  --foreground: #0b0d14;
+  --font-heading: var(--font-pixel);
+  --font-body: var(--font-geist);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-noob-blue: var(--noob-blue);
+  --color-noob-pink: var(--noob-pink);
+  --color-noob-muted: var(--noob-muted);
+  --color-noob-bg: var(--noob-bg);
+  --font-sans: var(--font-geist);
+  --font-serif: var(--font-pixel);
+}
+
+body {
+  background: var(--noob-bg);
+  color: var(--noob-ink);
+  font-family: var(--font-geist), system-ui, sans-serif;
+}
+
+.font-heading {
+  font-family: var(--font-pixel), ui-sans-serif, system-ui, sans-serif;
+}
+
+.font-body {
+  font-family: var(--font-geist), system-ui, sans-serif;
+}
+
+.font-amount {
+  font-family: var(--font-geist), system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
+.dash-surface {
+  background: var(--noob-white);
+  border: 1px solid color-mix(in srgb, var(--noob-muted) 45%, white);
+}
+
+.dash-muted {
+  color: color-mix(in srgb, var(--noob-ink) 60%, white);
+}

@@ -1,0 +1,33 @@
+import { NextResponse } from "next/server";
+import { z } from "zod";
+import { getSession } from "@/lib/auth/session";
+import { getServiceSupabase } from "@/lib/supabase/server";
+
+export async function DELETE(
+  _request: Request,
+  context: { params: Promise<{ id: string }> }
+) {
+  const session = await getSession();
+  if (!session) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
+
+  const { id } = await context.params;
+
+  const idParse = z.string().uuid().safeParse(id);
+  if (!idParse.success) {
+    return NextResponse.json({ message: "Invalid link ID" }, { status: 400 });
+  }
+
+  const supabase = getServiceSupabase();
+
+  const { error } = await supabase.from("payment_links").delete().eq("id", id);
+  if (error) {
+    return NextResponse.json(
+      { message: "Failed to delete payment link" },
+      { status: 500 }
+    );
+  }
+
+  return NextResponse.json({ ok: true });
+}

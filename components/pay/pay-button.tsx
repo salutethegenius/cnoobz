@@ -1,0 +1,111 @@
+"use client";
+
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { isValidPromoPreview, previewPromoAmount } from "@/lib/promo";
+import { formatBsd } from "@/lib/utils";
+
+export function PayButton({
+  linkId,
+  amountCents,
+  promoCode: configuredCode,
+  promoPercent,
+}: {
+  linkId: string;
+  amountCents: number;
+  promoCode: string;
+  promoPercent: number;
+}) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [promoCode, setPromoCode] = useState("");
+  const promoEnabled = Boolean(configuredCode && promoPercent > 0);
+  const promoConfig = promoEnabled
+    ? { code: configuredCode, percent: promoPercent }
+    : null;
+
+  const promoMatches = isValidPromoPreview(promoCode, promoConfig);
+  const displayAmount = previewPromoAmount(amountCents, promoCode, promoConfig);
+
+  async function startPayment() {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const res = await fetch("/api/cng-url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          linkId,
+          promoCode: promoCode.trim() || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Unable to start payment");
+
+      window.location.href = data.redirectPath;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Payment failed to start");
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2 text-center">
+        {promoMatches ? (
+          <>
+            <p className="font-body text-sm text-[var(--noob-blue)]/50 line-through">
+              {formatBsd(amountCents)}
+            </p>
+            <p className="font-amount text-4xl font-semibold tracking-tight text-[var(--noob-pink)]">
+              {formatBsd(displayAmount)}
+            </p>
+            <p className="font-body text-sm text-[var(--noob-blue)]">
+              {promoPercent}% promo applied
+            </p>
+          </>
+        ) : (
+          <p className="font-amount text-4xl font-semibold tracking-tight text-[var(--noob-pink)]">
+            {formatBsd(amountCents)}
+          </p>
+        )}
+      </div>
+
+      {promoEnabled && (
+        <div className="space-y-2">
+          <Label htmlFor="promoCode">Promo code (optional)</Label>
+          <Input
+            id="promoCode"
+            name="promoCode"
+            autoComplete="off"
+            placeholder="Enter promo code"
+            value={promoCode}
+            onChange={(e) => {
+              setPromoCode(e.target.value);
+              setError(null);
+            }}
+            disabled={loading}
+          />
+        </div>
+      )}
+
+      <Button
+        type="button"
+        size="lg"
+        className="w-full"
+        onClick={startPayment}
+        disabled={loading}
+      >
+        {loading ? "Redirecting…" : "Pay Now"}
+      </Button>
+      {error && (
+        <p className="text-center text-sm text-red-600" role="alert">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
